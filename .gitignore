@@ -1,2 +1,8 @@
 .DS_Store
 *.zip
+*/**/log*
+*/**/*log
+*/data/
+*/metric_model/
+*/**/test/
+*/**/__pycache__

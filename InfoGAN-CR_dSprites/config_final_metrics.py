@@ -1,6 +1,7 @@
 config = {
     "scheduler_config": {
-        "gpu": ["0", "1", "2", "3"],
+        # "gpu": ["0", "1", "2", "3"],
+        "gpu": ["0"],
         "temp_folder": "temp",
         "scheduler_log_file_path": "scheduler_final_metrics.log",
         "log_file": "worker_final_metrics.log",

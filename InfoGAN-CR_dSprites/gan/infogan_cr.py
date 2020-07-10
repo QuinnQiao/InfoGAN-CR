@@ -356,11 +356,11 @@ class INFOGAN_CR(object):
                 self.METRIC_FIELD_NAMES = ["epoch_id", "batch_id", "global_id"]
                 for k in metric:
                     self.METRIC_FIELD_NAMES.append(k)
-                with open(self.metric_path, "wb") as csv_file:
+                with open(self.metric_path, "w") as csv_file:
                     writer = csv.DictWriter(
                         csv_file, fieldnames=self.METRIC_FIELD_NAMES)
                     writer.writeheader()
-            with open(self.metric_path, "ab") as csv_file:
+            with open(self.metric_path, "a") as csv_file:
                 writer = csv.DictWriter(
                     csv_file, fieldnames=self.METRIC_FIELD_NAMES)
                 data = {
@@ -374,7 +374,7 @@ class INFOGAN_CR(object):
                 data.update(metric_string)
                 writer.writerow(data)
             for k in metric:
-                if isinstance(metric[k], (int, long, float, complex,
+                if isinstance(metric[k], (int, float, complex,
                                           np.float32, np.float64)):
                     summary = tf.Summary(
                         value=[tf.Summary.Value(
@@ -569,14 +569,15 @@ if __name__ == "__main__":
     gap_decrease_batch = 1
     cr_coe_start = 0.0
     cr_coe_increase_times = 1
-    cr_coe_increase = 1.0
+    cr_coe_increase = 2.0
     cr_coe_increase_batch = 288000
 
     shape_network = MetricRegresser(
         output_length=3,
         scope_name="dSpritesSampleQualityMetric_shape")
 
-    run_config = tf.ConfigProto()
+    os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+    run_config = tf.ConfigProto(allow_soft_placement=True)
     with tf.Session(config=run_config) as sess:
         factorVAEMetric = FactorVAEMetric(metric_data, sess=sess)
         dSpritesInceptionScore = DSpritesInceptionScore(

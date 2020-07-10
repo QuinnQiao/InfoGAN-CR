@@ -78,7 +78,8 @@ class UniformLatent(Latent):
 
     def sample_same(self, batch_size, group_num, alpha):
         assert group_num == 2
-        if isinstance(alpha, (int, long, float, complex)):
+        # long in py2, not in py3
+        if isinstance(alpha, (int, float, complex)):
             alpha = np.ones(shape=(batch_size, 1)) * alpha
         assert np.all(alpha <= self.high - self.low)
         data = self._sample_alpha(self.low + alpha / 2, self.high - alpha / 2)
@@ -87,7 +88,7 @@ class UniformLatent(Latent):
 
     def sample_different(self, batch_size, group_num, alpha):
         assert group_num == 2
-        if isinstance(alpha, (int, long, float, complex)):
+        if isinstance(alpha, (int, float, complex)):
             alpha = np.ones(shape=(batch_size, 1)) * alpha
         assert np.all(alpha <= self.high - self.low)
         data = []

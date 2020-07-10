@@ -52,7 +52,7 @@ class GANTask(GPUTask):
         time_path = os.path.join(self._work_dir, "time.txt")
         metric_path = os.path.join(self._work_dir, "metric.csv")
 
-        run_config = tf.ConfigProto()
+        run_config = tf.ConfigProto(allow_soft_placement=True)
         with tf.Session(config=run_config) as sess:
             factorVAEMetric = FactorVAEMetric(metric_data, sess=sess)
             dSpritesInceptionScore = DSpritesInceptionScore(

@@ -20,7 +20,8 @@ if __name__ == "__main__":
         output_length=3,
         scope_name="dSpritesSampleQualityMetric_shape")
 
-    run_config = tf.ConfigProto()
+    os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+    run_config = tf.ConfigProto(allow_soft_placement=True)
 
     with tf.Session(config=run_config) as sess:
         dSpritesSampleQualityMetric = DSpritesInceptionScore(

@@ -517,6 +517,41 @@ class INFOGAN_CR(object):
 
             self.save(global_id - 1)
 
+    def test_sample(self):
+        tf.global_variables_initializer().run()
+        self.load()
+        '''
+        z: 5 uniform factor code + 5 uniform noise
+        train: [-1, 1], test: [-2, 2]
+        placeholder: z_pl
+        img: fake_image_test_tf
+
+        '''
+        # fix noise, random factor
+        z = np.zeros((self.vis_num_rep, self.vis_num_sample, 10))
+        noise = np.random.uniform(-1., 1., size=(self.vis_num_rep, 5)) # [-1, 1] same as training
+        factor = np.linspace(-2., 2., num=self.vis_num_sample) # [-2, 2] extreme validation
+        for i in range(5):
+            z.fill(0)
+            z[:, :, 5:] = noise.reshape((-1, 1, 5)).repeat(self.vis_num_sample, axis=1)
+            z[:, :, i] = factor.reshape((1, -1)).repeat(self.vis_num_rep, axis=0)
+            samples = self.sess.run(self.fake_image_test_tf,
+                                    feed_dict={self.z_pl: z.reshape((-1, 10))})
+            image = self._image_list_to_grid(
+                samples, self.vis_num_rep, self.vis_num_sample)
+            file_path = os.path.join(self.sample_dir, "factor_{}.png".format(i))
+            imageio.imwrite(file_path, image)
+        # fix factor, random noise
+        z = np.zeros((self.vis_num_sample, 10))
+        noise = np.random.uniform(-2, 2, size=(self.vis_num_sample, 5))
+        z[:, 5:] = noise
+        samples = self.sess.run(self.fake_image_test_tf,
+                                feed_dict={self.z_pl: z})
+        image = self._image_list_to_grid(
+            samples, 1, self.vis_num_sample)
+        file_path = os.path.join(self.sample_dir, "noise.png")
+        imageio.imwrite(file_path, image)
+
 
 if __name__ == "__main__":
     from latent import UniformLatent, JointLatent
@@ -623,4 +658,5 @@ if __name__ == "__main__":
             metric_path=metric_path,
             output_reverse=False)
         gan.build()
-        gan.train()
+        # gan.train()
+        gan.test_sample()

@@ -521,35 +521,23 @@ class INFOGAN_CR(object):
         tf.global_variables_initializer().run()
         self.load()
         '''
-        z: 5 uniform factor code + 5 uniform noise
+        z: 5 uniform noise
+        train: [-1, 1], test: [-2, 2]
         placeholder: z_pl
         img: fake_image_test_tf
 
         '''
-        # fix noise, random factor
-        z = np.zeros((self.vis_num_rep, self.vis_num_sample, 10))
-        noise = np.random.uniform(-1., 1., size=(self.vis_num_rep, 5))
+        z = np.zeros((self.vis_num_rep, self.vis_num_sample, 5))
         factor = np.linspace(-1., 1., num=self.vis_num_sample)
         for i in range(5):
             z.fill(0)
-            z[:, :, 5:] = noise.reshape((-1, 1, 5)).repeat(self.vis_num_sample, axis=1)
             z[:, :, i] = factor.reshape((1, -1)).repeat(self.vis_num_rep, axis=0)
             samples = self.sess.run(self.fake_image_test_tf,
-                                    feed_dict={self.z_pl: z.reshape((-1, 10))})
+                                    feed_dict={self.z_pl: z.reshape((-1, 5))})
             image = self._image_list_to_grid(
                 samples, self.vis_num_rep, self.vis_num_sample)
             file_path = os.path.join(self.sample_dir, "factor_{}.png".format(i))
             imageio.imwrite(file_path, image)
-        # fix factor, random noise
-        z = np.zeros((self.vis_num_sample, 10))
-        noise = np.random.uniform(-1, 1, size=(self.vis_num_sample, 5))
-        z[:, 5:] = noise
-        samples = self.sess.run(self.fake_image_test_tf,
-                                feed_dict={self.z_pl: z})
-        image = self._image_list_to_grid(
-            samples, 1, self.vis_num_sample)
-        file_path = os.path.join(self.sample_dir, "noise.png")
-        imageio.imwrite(file_path, image)
 
 
 if __name__ == "__main__":
@@ -564,14 +552,12 @@ if __name__ == "__main__":
     _, height, width, depth = data.shape
     print(data.min(), data.max())
 
+    # factor only
     latent_list = []
     for i in range(5):
         latent_list.append(
             UniformLatent(
                 in_dim=1, out_dim=1, low=-1.0, high=1.0, apply_reg=True))
-    latent_list.append(
-        UniformLatent(
-            in_dim=5, out_dim=5, low=-1.0, high=1.0, apply_reg=False))
     latent = JointLatent(latent_list=latent_list)
 
     decoder = Decoder(
@@ -581,20 +567,20 @@ if __name__ == "__main__":
     crDiscriminator = \
         CrDiscriminator(output_length=latent.num_reg_latent)
 
-    checkpoint_dir = "./test/checkpoint"
+    checkpoint_dir = "./test_noz/checkpoint"
     if not os.path.exists(checkpoint_dir):
         os.makedirs(checkpoint_dir)
-    sample_dir = "./test/sample"
+    sample_dir = "./test_noz/sample"
     if not os.path.exists(sample_dir):
         os.makedirs(sample_dir)
-    time_path = "./test/time.txt"
-    metric_path = "./test/metric.csv"
+    time_path = "./test_noz/time.txt"
+    metric_path = "./test_noz/metric.csv"
     epoch = 28
     batch_size = 64
-    vis_freq = 200
+    vis_freq = 4000 # 200
     vis_num_sample = 10
     vis_num_rep = 10
-    metric_freq = 400
+    metric_freq = 4000 # 400
     info_coe_de = 0.05
     info_coe_infod = 0.05
     gap_start = 0.0
@@ -605,6 +591,7 @@ if __name__ == "__main__":
     cr_coe_increase_times = 1
     cr_coe_increase = 2.0
     cr_coe_increase_batch = 288000
+    summary_freq = 10 # 1
 
     shape_network = MetricRegresser(
         output_length=3,
@@ -657,5 +644,4 @@ if __name__ == "__main__":
             metric_path=metric_path,
             output_reverse=False)
         gan.build()
-        # gan.train()
-        gan.test_sample()
+        gan.train()

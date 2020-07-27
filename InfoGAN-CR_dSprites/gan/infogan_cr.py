@@ -551,6 +551,20 @@ class INFOGAN_CR(object):
         file_path = os.path.join(self.sample_dir, "noise.png")
         imageio.imwrite(file_path, image)
 
+    def generate_eval_data(self, fair_metric_data_path):
+        metric_data = np.load(fair_metric_data_path, allow_pickle=True)['metric_data'][()]
+        # for FactorVAE
+        std_data = self.model.inference_from(metric_data["img_eval_std"].reshape[-1, 64, 64, 1].astype(np.float32))
+        eval_data = []
+        for data in metric_data["groups"]:
+            data_inference = self.model.inference_from(data["img"].reshape[-1, 64, 64, 1].astype(np.float32))
+            eval_data.append({"img2latent": data_inference, "label": data["label"]})
+        eval_data = {"groups": eval_data}
+        np.savez(os.path.join(self.sample_dir, "FactorVAE_metric_data.npz"), std_data=std_data, eval_data=eval_data)
+        # for MIG
+        eval_data = self.model.inference_from(metric_data["img_with_latent"]["img"].reshape[-1, 64, 64, 1].astype(np.float32))
+        np.save(os.path.join(self.sample_dir, "MIG_metric_data.npy"), eval_data)
+
 
 if __name__ == "__main__":
     from latent import UniformLatent, JointLatent
@@ -558,6 +572,7 @@ if __name__ == "__main__":
         MetricRegresser
     from load_data import load_dSprites
     from metric import FactorVAEMetric, DSpritesInceptionScore, DHSICMetric
+    import sys
 
     data, metric_data, latent_values, metadata = \
         load_dSprites("../data/dSprites")
@@ -658,4 +673,5 @@ if __name__ == "__main__":
             output_reverse=False)
         gan.build()
         # gan.train()
-        gan.test_sample()
+        # gan.test_sample()
+        gan.generate_eval_data(sys.argv[1])
